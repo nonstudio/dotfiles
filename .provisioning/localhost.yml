@@ -65,10 +65,9 @@
         - { name: airserver }
         - { name: android-studio }
         - { name: appcleaner }
-        - { name: avast mac security }
         - { name: bartender }
         - { name: bettertouchtool }
-        - { name: cheatsheet }
+        - { name: clarify }
         - { name: coteditor }
         - { name: delayedlauncher }
         - { name: emacs-mac }
@@ -80,11 +79,12 @@
         - { name: karabiner }
         - { name: keyboard-maestro }
         - { name: keyboardcleantool }
+        - { name: lightningkeyboard }
         - { name: mou }
+        - { name: noisytyper }
         - { name: onyx }
         - { name: path-finder }
         - { name: scapple }
-        - { name: skitch }
         - { name: sourcetree }
         - { name: totals }
         - { name: xscope }
