@@ -3,63 +3,42 @@
   gather_facts: no
   sudo: no
   roles:
-    - homebrew
-    - homebrew-cask
+    - hnakamur.homebrew-packages
+    - hnakamur.homebrew-cask-packages
   vars:
     homebrew_taps:
         -homebrew/apache
         -homebrew/php
         -caskroom/cask
         # -railwaycat/emacsmacport
+
+    homebrew_repositories:
         -sanemat/font
 
     homebrew_packages:
         - { name: ansible }
-        - { name: autojump }
-        - { name: autoconf }
-        - { name: cmake }
         - { name: coreutils }
-        - { name: ctags }
+        - { name: ctag }
         - { name: curl }
         - { name: direnv }
-        - { name: fish }
-        - { name: flow }
         - { name: git }
-        - { name: gibo }
         - { name: go }
-        - { name: graphviz }
-        - { name: hub }
-        - { name: imagemagick }
         - { name: jq }
-        - { name: lha }
-        - { name: lv }
-        - { name: mercurial }
+        - { name: lua }
+        - { name: vim, install_options: with-lua }
         - { name: mysql }
-        - { name: nkf }
+        - { name: node }
         - { name: openssl }
         - { name: openssl, state: linked, install_options: force }
-        - { name: packer }
-        - { name: peco }
         - { name: phantomjs }
-        - { name: pkg-config }
         - { name: python }
         - { name: rbenv }
-        - { name: readline }
-        - { name: reattach-to-user-namespace }
-        - { name: redis }
-        - { name: rlwrap }
+        - { name: reattach-to user-namespace }
         - { name: ruby-build }
-        - { name: socat }
         - { name: source-highlight }
         - { name: sqlite }
-        - { name: tig }
-        - { name: tofrodos }
         - { name: tmux }
-        - { name: tree }
-        - { name: w3m }
-        - { name: wget }
-        - { name: xz }
-        - { name: zsh, install_options: disable-etcdir }
+        - { name: z }
 
     homebrew_cask_packages:
         - { name: airserver }
@@ -81,7 +60,6 @@
         - { name: keyboardcleantool }
         - { name: lightningkeyboard }
         - { name: mou }
-        - { name: noisytyper }
         - { name: onyx }
         - { name: path-finder }
         - { name: scapple }
@@ -91,15 +69,24 @@
         - { name: xtrafinder }
 
     tasks:
-        - name: homebrew の tap リポジトリを追加
+        - name: 'make symlinks to under home dir'
+          file: src={{ item }} dest=~/.{{ item | basename }} state=link force=yes
+          with_fileglob:
+            - home_symlinks/*
+
+        - name: mkdir vim-neobundle dir
+          file: path=~/.vim/bundle state=directory
+          notify: install neobundle
+
+        - name: Add tap the repository of homebrew
           homebrew_taps: tap={{ item }} state=present
           with_items: homebrew_taps
 
-        - name: homebrew をアップデート
+        - name: Updated homebrew
           homebrew: update_homebrew=yes
 
         # brew
-        - name: brew パッケージをインストール
+        - name: Install the brew package
           homebrew: >
             name={{ item.name }}
             state={{ item.state | default('latest') }}
@@ -110,39 +97,39 @@
             }}
           with_items: homebrew_packages
           register: brew_result
-        - name: brew パッケージの情報保存先ディレクトリを作成
+        - name: Create information destination directory of brew package
           file: path=brew_info state=directory
-        - name: brew パッケージの情報を保存
+        - name: Save the information in the brew package
           shell: brew info {{ item }} > brew_info/{{ item }}
           with_items: brew_result.results | selectattr('changed') | map(attribute='item') | map(attribute='name') | list
 
         # cask
-        - name: homebrew-cask のインストール
+        - name: Install the homebrew-cask
           homebrew: name=brew-cask state=latest
-        - name: cask パッケージをインストール
+        - name: Install the cask package
           homebrew_cask: name={{ item.name }} state={{ item.stete|default('installed') }}
           with_items: homebrew_cask_packages
           register: cask_result
-        - name: cask パッケージの情報保存先ディレクトリを作成
+        - name: Create information destination directory of cask package
           file: path=cask_info state=directory
-        - name: cask パッケージの情報を保存
+        - name: Save the information in the cask package
           shell: brew cask info {{ item }} > cask_info/{{ item }}
           with_items: cask_result.results | selectattr('changed') | map(attribute='item') | map(attribute='name') | list
 
         # oh-my-zsh
-        - name: oh-my-zsh のインストール
+        - name: Install the oh-my-zsh
           shell: curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh | sh
           args:
             creates: ~/.oh-my-zsh/
 
         # Ricty
-        - name: xquartz のインストール(for Ricty)
+        - name: Install the xquartz for Ricty
           homebrew_cask: name=xquartz
-        - name: fontforge のインストール
+        - name: Install the fontforge
           homebrew: name=fontforge
-        - name: Ricty のインストール
+        - name: Install the Ricty
           homebrew: name=ricty
-        - name: 生成されたフォントファイルをコピー
+        - name: Copy the generated fot file
           shell: cp -f $(brew --cellar ricty)/*/share/fonts/Ricty*.ttf ~/Library/Fonts/
           args:
             creates: ~/Library/Fonts/Ricty-Bold.ttf
@@ -151,3 +138,5 @@
     handlers:
         - name: run fc-cache
           sell: fc-cache -vf
+        - name: install neobundle
+          command: git clone git://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim

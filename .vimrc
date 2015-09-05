@@ -587,10 +587,10 @@ set foldmethod=syntax
 "----------------------------------------
 
 " ウィンドウポジション
-winpos 546 0
+winpos 705 0
 
 " ウィンドウの幅
-set columns=88
+set columns=72
 
 " ウィンドウの高さ
 set lines=48
